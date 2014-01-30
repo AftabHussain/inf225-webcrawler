@@ -4,7 +4,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.uci.ics.crawler4j.crawler.Page;
-import edu.uci.ics.inf225.webcrawler.indexing.LuceneIndexer;
+import edu.uci.ics.inf225.webcrawler.indexing.LuceneIndexerHelper;
 
 public class WebCrawlerController {
 
@@ -20,7 +20,7 @@ public class WebCrawlerController {
 	}
 
 	private void startIndexer(BlockingQueue<Page> queue) {
-		LuceneIndexer indexer = new LuceneIndexer(queue);
+		LuceneIndexerHelper indexer = new LuceneIndexerHelper(queue);
 	}
 
 	private void startCrawler4j(BlockingQueue<Page> queue) {
