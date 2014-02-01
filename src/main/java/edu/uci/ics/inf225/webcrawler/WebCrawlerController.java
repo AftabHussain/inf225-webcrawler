@@ -49,7 +49,12 @@ public class WebCrawlerController {
 	}
 
 	public void start() {
-		// Start Crawler here. BLOCKING OPERATION. It will not continue until it
+		startCrawler();
+	}
+
+	private void startCrawler() {
+		// TODO Start Crawler here. BLOCKING OPERATION. It will not continue
+		// until it
 		// finishes.
 	}
 }
