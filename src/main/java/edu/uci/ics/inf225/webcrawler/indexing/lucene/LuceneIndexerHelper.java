@@ -1,4 +1,4 @@
-package edu.uci.ics.inf225.webcrawler.indexing;
+package edu.uci.ics.inf225.webcrawler.indexing.lucene;
 
 import java.io.IOException;
 import java.io.Reader;
