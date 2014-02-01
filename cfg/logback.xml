@@ -24,13 +24,12 @@
   		<file>crawledpages.log</file>
   		<append>false</append>
    	 <encoder>
-   	   <pattern>%d{HH:mm:ss.SSS}: [%msg%n]</pattern>
+   	   <pattern>%d{HH:mm:ss.SSS}: [%msg]%n</pattern>
    	 </encoder>
   	</appender>
   
   <logger name="console" level="INFO">
   	<appender-ref ref="consoleAppender" />
-    <appender-ref ref="file" />
   </logger>
 
   <logger name="edu.uci.ics" level="ERROR">
