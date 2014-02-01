@@ -54,6 +54,15 @@ public class PageTokenizer {
 
 	public void processPage(Page page) {
 		// TODO Auto-generated method stub
-		pageLogger.info("Page visited: {}", page.getWebURL().getURL());
+		pageLogger.info("{},{}", page.getWebURL().getURL(), extractContentLength(page));
+	}
+
+	private Object extractContentLength(Page page) {
+		for (int i = 0; i < page.getFetchResponseHeaders().length; i++) {
+			if ("Content-Length".equals(page.getFetchResponseHeaders()[i].getName())) {
+				return page.getFetchResponseHeaders()[i].getValue();
+			}
+		}
+		return "0";
 	}
 }

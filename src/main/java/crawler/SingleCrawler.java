@@ -11,6 +11,8 @@ public class SingleCrawler extends WebCrawler {
 
 	private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g" + "|png|tiff?|mid|mp2|mp3|mp4" + "|wav|avi|mov|mpeg|ram|m4v|pdf" + "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
 
+	private static final Pattern DOMAIN_REGEX = Pattern.compile(".*?://.*?ics.uci.edu.*?");
+
 	public SingleCrawler() {
 		// TODO Auto-generated constructor stub
 	}
@@ -22,7 +24,9 @@ public class SingleCrawler extends WebCrawler {
 	@Override
 	public boolean shouldVisit(WebURL url) {
 		String href = url.getURL().toLowerCase();
-		return href.startsWith("http://www.ics.uci.edu/") && !FILTERS.matcher(href).matches();
+		// return href.startsWith("http://www.ics.uci.edu/") &&
+		// !FILTERS.matcher(href).matches();
+		return DOMAIN_REGEX.matcher(href).matches() && !FILTERS.matcher(href).matches();
 	}
 
 	/**
