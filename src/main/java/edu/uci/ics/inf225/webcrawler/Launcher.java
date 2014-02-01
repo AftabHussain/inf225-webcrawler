@@ -11,10 +11,15 @@ public class Launcher {
 		WebCrawlerController controller = new WebCrawlerController();
 
 		console.info("Initializing Web Crawler...");
-		controller.initialize();
-		console.info("Starting Web Crawler...");
-		controller.start();
-		console.info("Web Crawler finished.");
+		try {
+			controller.initialize();
+			console.info("Starting Web Crawler...");
+			controller.start();
+			console.info("Web Crawler finished.");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.exit(0); // TODO Implement stop method.
 	}
 }
