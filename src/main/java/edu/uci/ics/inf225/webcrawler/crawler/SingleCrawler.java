@@ -1,4 +1,4 @@
-package crawler;
+package edu.uci.ics.inf225.webcrawler.crawler;
 
 import java.util.regex.Pattern;
 

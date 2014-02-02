@@ -1,20 +1,26 @@
 package edu.uci.ics.inf225.webcrawler;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-import crawler.SingleCrawler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.uci.ics.crawler4j.crawler.CrawlConfig;
 import edu.uci.ics.crawler4j.crawler.CrawlController;
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
+import edu.uci.ics.inf225.webcrawler.crawler.SingleCrawler;
 import edu.uci.ics.inf225.webcrawler.tokenizing.PageTokenizer;
 
 public class WebCrawlerController {
 
 	private static final int PAGE_QUEUE_SIZE = 100;
 	private CrawlController controller;
+
+	private static final Logger console = LoggerFactory.getLogger("console");
 
 	public WebCrawlerController() {
 	}
@@ -59,6 +65,7 @@ public class WebCrawlerController {
 		config.setPolitenessDelay(300);
 		config.setMaxDepthOfCrawling(-1);
 		config.setMaxPagesToFetch(-1);
+		config.setIncludeHttpsPages(true);
 
 		/*
 		 * Instantiate the controller for this crawl.
@@ -73,20 +80,23 @@ public class WebCrawlerController {
 		 * URLs that are fetched and then the crawler starts following links
 		 * which are found in these pages
 		 */
-		controller.addSeed("http://www.ics.uci.edu/~welling/");
-		controller.addSeed("http://www.ics.uci.edu/~lopes/");
 		controller.addSeed("http://www.ics.uci.edu/");
 	}
 
 	public void start() {
+		long beforeCrawling = System.nanoTime();
 		startCrawler();
+		long afterCrawling = System.nanoTime();
+		long crawlingTime = TimeUnit.NANOSECONDS.toMillis(afterCrawling - beforeCrawling);
+
+		console.info("Total crawling time: {}", crawlingTime);
 	}
 
 	private void startCrawler() {
 		// TODO Start Crawler here. BLOCKING OPERATION. It will not continue
 		// until it
 		// finishes.
-		int numberOfCrawlers = 7;
+		int numberOfCrawlers = 10;
 		/*
 		 * Start the crawl. This is a blocking operation, meaning that your code
 		 * will reach the line after this only when crawling is finished.
