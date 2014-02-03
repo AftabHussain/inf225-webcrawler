@@ -80,6 +80,7 @@ public class SingleCrawler extends WebCrawler {
 	private Predicate blackListPrefixesPredicate() {
 		final List<String> blackListedPrefixes = new LinkedList<>();
 
+		// Blacklisted URL's prefixes should be added here.
 		blackListedPrefixes.add("http://archive.ics.uci.edu/ml/datasets.html?");
 
 		return new Predicate() {
