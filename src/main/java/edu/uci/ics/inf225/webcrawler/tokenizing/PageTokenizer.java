@@ -1,6 +1,7 @@
 package edu.uci.ics.inf225.webcrawler.tokenizing;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
@@ -15,6 +16,8 @@ public class PageTokenizer {
 	private static final Logger pageLogger = LoggerFactory.getLogger("pagelogger");
 	private static final Logger log = LoggerFactory.getLogger(PageTokenizer.class);
 
+	private ExecutorService threadExecutor;
+
 	public PageTokenizer(BlockingQueue<Page> pageQueue) {
 		this.pageQueue = pageQueue;
 	}
@@ -24,13 +27,17 @@ public class PageTokenizer {
 	}
 
 	public void start() {
-		Executors.newSingleThreadExecutor().execute(new PageTokenizerTask());
+		threadExecutor = Executors.newSingleThreadExecutor();
+		threadExecutor.execute(new PageTokenizerTask());
+	}
+
+	public void stop() {
+		threadExecutor.shutdownNow();
 	}
 
 	private class PageTokenizerTask implements Runnable {
 
 		private boolean keepWorking;
-		private Page page;
 
 		public PageTokenizerTask() {
 		}
@@ -40,12 +47,11 @@ public class PageTokenizer {
 			keepWorking = true;
 			while (keepWorking) {
 				try {
-					page = pageQueue.take();
+					Page page = pageQueue.take();
 
 					processPage(page);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					keepWorking = false;
 				}
 			}
 		}
@@ -53,7 +59,6 @@ public class PageTokenizer {
 	}
 
 	public void processPage(Page page) {
-		// TODO Auto-generated method stub
 		pageLogger.info("{},{}", page.getWebURL().getURL(), extractContentLength(page));
 	}
 

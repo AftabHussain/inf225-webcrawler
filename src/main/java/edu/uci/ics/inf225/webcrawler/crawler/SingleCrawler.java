@@ -82,6 +82,7 @@ public class SingleCrawler extends WebCrawler {
 
 		// Blacklisted URL's prefixes should be added here.
 		blackListedPrefixes.add("http://archive.ics.uci.edu/ml/datasets.html?");
+		blackListedPrefixes.add("http://calendar.ics.uci.edu/calendar.php?");
 
 		return new Predicate() {
 
