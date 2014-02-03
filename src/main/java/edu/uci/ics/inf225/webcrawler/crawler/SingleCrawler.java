@@ -62,7 +62,7 @@ public class SingleCrawler extends WebCrawler {
 	 */
 	private Predicate extensionsPredicate() {
 		return new Predicate() {
-
+			// Anonymous class
 			@Override
 			public boolean evaluate(Object object) {
 				String href = ((WebURL) object).getPath().toLowerCase();
@@ -70,7 +70,7 @@ public class SingleCrawler extends WebCrawler {
 			}
 		};
 	}
-
+	
 	/**
 	 * Checks whether a {@link WebURL}'s prefix is black-listed.
 	 * 
@@ -83,6 +83,7 @@ public class SingleCrawler extends WebCrawler {
 		// Blacklisted URL's prefixes should be added here.
 		blackListedPrefixes.add("http://archive.ics.uci.edu/ml/datasets.html?");
 		blackListedPrefixes.add("http://calendar.ics.uci.edu/calendar.php?");
+//		blackListedPrefixes.add("http://calendar.ics.uci.edu/calendar.php?");
 
 		return new Predicate() {
 
