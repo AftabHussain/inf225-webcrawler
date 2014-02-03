@@ -1,6 +1,11 @@
 package edu.uci.ics.inf225.webcrawler.crawler;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Pattern;
+
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.PredicateUtils;
 
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.crawler.WebCrawler;
@@ -9,12 +14,14 @@ import edu.uci.ics.inf225.webcrawler.CrawlingListener;
 
 public class SingleCrawler extends WebCrawler {
 
+	private static final String EXPECTED_SUBDOMAIN_SUFFIX = ".ics";
+	private static final String EXPECTED_DOMAIN = "uci.edu";
 	private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g" + "|png|tiff?|mid|mp2|mp3|mp4" + "|wav|avi|mov|mpeg|ram|m4v|pdf" + "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
 
-	private static final Pattern DOMAIN_REGEX = Pattern.compile(".*?://.*?ics.uci.edu.*?");
+	private Predicate shouldVisitPredicate;
 
 	public SingleCrawler() {
-		// TODO Auto-generated constructor stub
+		shouldVisitPredicate = buildShouldVisitPredicate();
 	}
 
 	/**
@@ -23,10 +30,105 @@ public class SingleCrawler extends WebCrawler {
 	 */
 	@Override
 	public boolean shouldVisit(WebURL url) {
-		String href = url.getURL().toLowerCase();
-		// return href.startsWith("http://www.ics.uci.edu/") &&
-		// !FILTERS.matcher(href).matches();
-		return DOMAIN_REGEX.matcher(href).matches() && !FILTERS.matcher(href).matches();
+		return shouldVisitPredicate.evaluate(url);
+	}
+
+	/**
+	 * Creates a {@link Predicate} to decide whether a {@link WebURL} has to be
+	 * visited or not.
+	 * 
+	 * @return a {@link Predicate} that will return <code>true</code> whether
+	 *         the {@link WebURL} must be visited. Otherwise, the
+	 *         {@link Predicate} will return <code>false</code>.
+	 */
+	protected Predicate buildShouldVisitPredicate() {
+		List<Predicate> predicates = new LinkedList<>();
+
+		predicates.add(domainPredicate());
+		predicates.add(subdomainPredicate());
+		predicates.add(extensionsPredicate());
+		// Avoid blacklist. (NOT operation).
+		predicates.add(PredicateUtils.notPredicate(blackListPrefixesPredicate()));
+
+		return PredicateUtils.allPredicate(predicates);
+	}
+
+	/**
+	 * Creates a {@link Predicate} to check the page extension.
+	 * 
+	 * @return A {@link Predicate} that will return <code>true</code> whether
+	 *         the {@link WebURL} does NOT matches the
+	 *         {@link SingleCrawler#FILTERS} regular expression.
+	 */
+	private Predicate extensionsPredicate() {
+		return new Predicate() {
+
+			@Override
+			public boolean evaluate(Object object) {
+				String href = ((WebURL) object).getPath().toLowerCase();
+				return !FILTERS.matcher(href).matches();
+			}
+		};
+	}
+
+	/**
+	 * Checks whether a {@link WebURL}'s prefix is black-listed.
+	 * 
+	 * @return A {@link Predicate} that will return <code>true</code> if the
+	 *         {@link WebURL}'s prefix <b>is</b> present in the black list.
+	 */
+	private Predicate blackListPrefixesPredicate() {
+		final List<String> blackListedPrefixes = new LinkedList<>();
+
+		blackListedPrefixes.add("http://archive.ics.uci.edu/ml/datasets.html?");
+
+		return new Predicate() {
+
+			@Override
+			public boolean evaluate(Object object) {
+				for (String blackListedPrefix : blackListedPrefixes) {
+					if (((WebURL) object).getURL().startsWith(blackListedPrefix)) {
+						return true;
+					}
+				}
+				return false;
+			}
+		};
+	}
+
+	/**
+	 * Checks whether a {@link WebURL} sub-domain ends with
+	 * {@link SingleCrawler#EXPECTED_SUBDOMAIN_SUFFIX}.
+	 * 
+	 * @return A {@link Predicate} that will return <code>true</code> if the
+	 *         {@link WebURL}'s sub-domain ends with
+	 *         {@link SingleCrawler#EXPECTED_SUBDOMAIN_SUFFIX}.
+	 */
+	private Predicate subdomainPredicate() {
+		return new Predicate() {
+
+			@Override
+			public boolean evaluate(Object object) {
+				return ((WebURL) object).getSubDomain().endsWith(EXPECTED_SUBDOMAIN_SUFFIX);
+			}
+		};
+	}
+
+	/**
+	 * Checks whether a {@link WebURL} domain is
+	 * {@link SingleCrawler#EXPECTED_DOMAIN}.
+	 * 
+	 * @return A {@link Predicate} that will return <code>true</code> if the
+	 *         {@link WebURL}'s domain is {@link SingleCrawler#EXPECTED_DOMAIN}.
+	 **/
+	private Predicate domainPredicate() {
+		return new Predicate() {
+
+			@Override
+			public boolean evaluate(Object object) {
+				return ((WebURL) object).getDomain().equals(EXPECTED_DOMAIN);
+			}
+		};
 	}
 
 	/**

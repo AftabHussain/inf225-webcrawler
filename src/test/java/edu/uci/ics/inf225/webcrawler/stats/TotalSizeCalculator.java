@@ -13,7 +13,7 @@ public class TotalSizeCalculator {
 
 	@Test
 	public void calculateSize() throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader("crawledpages.log"));
+		BufferedReader reader = new BufferedReader(new FileReader("crawledpages.20140202.log"));
 
 		String line;
 		long totalSizeBytes = 0L;
@@ -38,7 +38,7 @@ public class TotalSizeCalculator {
 		reader.close();
 		long totalSizeMB = totalSizeBytes / 1024 / 1024;
 		double percentageOfUnknownPageLengths = (double) zeroCounter / (double) counter;
-		System.out.println(totalSizeMB + " (~" + totalSizeMB * (1 + percentageOfUnknownPageLengths) + ") MB ");
+		System.out.println(totalSizeMB + " (~" + totalSizeMB / (1 - percentageOfUnknownPageLengths) + ") MB ");
 		System.out.println(counter + " pages crawled.");
 		System.out.println(zeroCounter + " pages with unknown size crawled (" + percentageOfUnknownPageLengths + ").");
 	}
