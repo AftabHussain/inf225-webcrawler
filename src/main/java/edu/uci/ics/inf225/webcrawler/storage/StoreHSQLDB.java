@@ -1,10 +1,7 @@
 package edu.uci.ics.inf225.webcrawler.storage;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
-import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,25 +11,49 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * @author Rezvan
  * 
  */
 public class StoreHSQLDB {
 
-	public Connection conn = null;
+	private static final int MAX_TITLE_LENGTH = 300;
+
+	private Connection conn = null;
+
 	private PreparedStatement ps;
+
+	public StoreHSQLDB() {
+	}
 
 	public void connect() throws Exception {
 		Class.forName("org.hsqldb.jdbcDriver");
-		conn = DriverManager.getConnection("jdbc:hsqldb:file:crawlerdb", "sa",
-				"");
+		conn = DriverManager.getConnection("jdbc:hsqldb:file:crawlerdb", "sa", "");
 	}
 
 	public void shutdown() throws SQLException {
 		Statement st = conn.createStatement();
 		st.execute("SHUTDOWN");
 		conn.close();
+	}
+
+	public synchronized void deleteTable(String table) throws SQLException {
+		Statement st = null;
+		ResultSet rs = null;
+
+		try {
+			st = conn.createStatement();
+			rs = st.executeQuery("DROP TABLE if exists " + table);
+		} finally {
+			if (rs != null) {
+				rs.close();
+			}
+			if (st != null) {
+				st.close();
+			}
+		}
 	}
 
 	public synchronized void selectquery(String expression) throws SQLException {
@@ -50,27 +71,25 @@ public class StoreHSQLDB {
 		Statement st = null;
 		try {
 			st = conn.createStatement();
-			st.execute("CREATE TABLE pages ( page_id INTEGER IDENTITY, url VARCHAR(1000), title VARCHAR(300), content CLOB)");
-			// st.execute("CREATE TABLE terms ( term_id INTEGER IDENTITY, term VARCHAR(300), gram INTEGER)");
-			// st.execute("CREATE TABLE postings ( term_id INTEGER, page_id INTEGER, frequency INTEGER)");
+			st.execute("CREATE TABLE IF NOT EXISTS pages ( page_id INTEGER IDENTITY, url VARCHAR(1000), title VARCHAR(" + MAX_TITLE_LENGTH + "), content CLOB)");
 			st.close();
 			ps = createPreparedStatement();
 		} catch (SQLException e) {
 			// tables are existed
-			
+
 			e.printStackTrace();
 		}
 	}
 
 	// Uses Prepared Statement to insert pages
-	public synchronized void insertP(String url, String title, String content)
-			throws SQLException {
+	public synchronized void insertP(String url, String title, String content) throws SQLException {
 
 		ps.setString(1, url);
 		ps.setString(2, title);
 		ps.setClob(3, new StringReader(content));
+		ps.addBatch();
 
-		ps.execute();
+		ps.executeBatch();
 	}
 
 	private PreparedStatement createPreparedStatement() throws SQLException {
@@ -103,12 +122,9 @@ public class StoreHSQLDB {
 			for (i = 0; i < colmax; ++i) {
 				o = rs.getObject(i + 1); // Is SQL the first column is indexed
 
-				if(o instanceof Clob) {
-					Reader reader = ((Clob)o).getCharacterStream();
-					BufferedReader bufferedReader = new BufferedReader(reader);
-					
+				if (o instanceof Clob) {
 					try {
-						System.out.println(bufferedReader.readLine());
+						System.out.println(IOUtils.toString(((Clob) o).getCharacterStream()));
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -117,16 +133,9 @@ public class StoreHSQLDB {
 					// with 1 not 0
 					System.out.print(o.toString() + " ");
 				}
-				
+
 			}
 			System.out.println(" ");
 		}
 	}
-
-	public void createBlob(String ht) throws SQLException {
-
-		Blob myClob = conn.createBlob();
-
-	}
-
 }

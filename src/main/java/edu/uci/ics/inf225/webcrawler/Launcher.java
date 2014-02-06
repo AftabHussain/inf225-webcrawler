@@ -1,5 +1,7 @@
 package edu.uci.ics.inf225.webcrawler;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,7 +9,10 @@ public class Launcher {
 
 	private static final Logger console = LoggerFactory.getLogger("console");
 
+	private static long startTime;
+
 	public static void main(String[] args) {
+		startTime = System.currentTimeMillis();
 		WebCrawlerController controller = new WebCrawlerController();
 
 		console.info("Initializing Web Crawler...");
@@ -40,6 +45,7 @@ public class Launcher {
 
 		@Override
 		public void run() {
+			System.out.println("Total crawling time: " + TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - startTime) + " min.");
 			System.out.println("Executing Shutdown Hook...");
 			controller.stop();
 		}

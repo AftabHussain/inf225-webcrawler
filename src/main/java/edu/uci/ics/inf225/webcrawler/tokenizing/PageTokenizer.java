@@ -1,44 +1,35 @@
 package edu.uci.ics.inf225.webcrawler.tokenizing;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.LowerCaseFilter;
-import org.apache.lucene.analysis.core.WhitespaceTokenizer;
-import org.apache.lucene.analysis.miscellaneous.WordDelimiterFilter;
-import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.parser.HtmlParseData;
+import edu.uci.ics.inf225.webcrawler.NewPageListener;
 import edu.uci.ics.inf225.webcrawler.stats.StatsCalculator;
 
-public class PageTokenizer {
-
-	private BlockingQueue<Page> pageQueue;
+public class PageTokenizer implements NewPageListener {
 
 	private static final Logger pageLogger = LoggerFactory.getLogger("pagelogger");
 	private static final Logger log = LoggerFactory.getLogger(PageTokenizer.class);
 
 	private static final String CONTENT_FIELD = "content";
 
-	private ExecutorService threadExecutor;
-
 	private StatsCalculator calculator;
 
-	public PageTokenizer(BlockingQueue<Page> pageQueue, StatsCalculator calculator) {
-		this.pageQueue = pageQueue;
+	public PageTokenizer(StatsCalculator calculator) {
 		this.calculator = calculator;
 	}
 
@@ -47,105 +38,36 @@ public class PageTokenizer {
 	}
 
 	public void start() {
-		threadExecutor = Executors.newSingleThreadExecutor();
-		threadExecutor.execute(new PageTokenizerTask());
+		// Nothing to do, so far.
 	}
 
 	public void stop() {
-		threadExecutor.shutdownNow();
+		// Nothing to do, so far.
 	}
 
-	private class PageTokenizerTask implements Runnable {
+	public void newPage(Page page) {
+		pageLogger.info("{},{},{}", page.getWebURL().getURL(), extractContentLength(page), page.getWebURL().getDepth());
 
-		private boolean keepWorking;
+		calculator.newPage(page);
+		try {
+			List<String> tokens = getTerms(page);
+			passTermsToCalculator(tokens);
 
-		public PageTokenizerTask() {
+		} catch (IOException e) {
+			log.error("Page {} could not be processed.", page.getWebURL());
+		} finally {
+			calculator.closePage(page);
 		}
-
-		@Override
-		public void run() {
-			keepWorking = true;
-			while (keepWorking) {
-				try {
-					Page page = pageQueue.take();
-
-					processPage(page);
-				} catch (InterruptedException e) {
-					keepWorking = false;
-				}
-			}
-		}
-
 	}
 
-	public void processPage(Page page) {
-		pageLogger.info("{},{}", page.getWebURL().getURL(), extractContentLength(page));
-
-//		calculator.newPage(page);
-//		try {
-//			List<String> tokens = getTerms(page);
-//			passTermsToCalculator(tokens, 1);
-//
-//			List<String> _2grams = get2Grams(page);
-//			passTermsToCalculator(_2grams, 2);
-//
-//		} catch (IOException e) {
-//			log.error("Page {} could not be processed.", page.getWebURL());
-//		} finally {
-//			calculator.closePage(page);
-//		}
-	}
-
-	private void passTermsToCalculator(List<String> tokens, int gramity) {
+	private void passTermsToCalculator(List<String> tokens) {
 		for (String token : tokens) {
-			calculator.newToken(token, gramity);
+			calculator.newToken(token);
 		}
-	}
-
-	private Analyzer create2GramsAnalyzer() {
-		return new Analyzer() {
-
-			@Override
-			protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
-				/*
-				 * Splits input by white space.
-				 */
-				WhitespaceTokenizer source = new WhitespaceTokenizer(Version.LUCENE_46, reader);
-
-				TokenStream result = null;
-
-				/*
-				 * Removes possessive 's from words. Also, splits words by
-				 * non-alphanumeric characters such as slash, hyphens, etc.
-				 */
-				int configurationFlags = WordDelimiterFilter.STEM_ENGLISH_POSSESSIVE | WordDelimiterFilter.GENERATE_WORD_PARTS | WordDelimiterFilter.GENERATE_NUMBER_PARTS;
-				result = new WordDelimiterFilter(source, configurationFlags, null);
-
-				/*
-				 * Normalize tokens to lower-case.
-				 */
-				result = new LowerCaseFilter(Version.LUCENE_46, result);
-
-				// result = new NGramTokenFilter(Version.LUCENE_46, result, 2,
-				// 2);
-				ShingleFilter shingleFilter = new ShingleFilter(result, 2, 2);
-				shingleFilter.setOutputUnigrams(false);
-				result = shingleFilter;
-
-				TokenStreamComponents components = new TokenStreamComponents(source, result);
-
-				return components;
-			}
-
-		};
 	}
 
 	private List<String> getTerms(Page page) throws IOException {
 		return getTokens(page, createLuceneAnalyzer());
-	}
-
-	private List<String> get2Grams(Page page) throws IOException {
-		return getTokens(page, create2GramsAnalyzer());
 	}
 
 	private List<String> getTokens(Page page, Analyzer analyzer) throws IOException {
@@ -176,14 +98,25 @@ public class PageTokenizer {
 	private String getContentFromPage(Page page) {
 		if (page.getParseData() instanceof HtmlParseData) {
 			HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
-			return htmlParseData.getHtml();
+			return htmlParseData.getText();
 		} else {
 			return page.getParseData().toString();
 		}
 	}
 
 	private Analyzer createLuceneAnalyzer() {
-		return new SimpleAnalyzer();
+		return new SimpleAnalyzer(loadStopWords());
+	}
+
+	private List<String> loadStopWords() {
+		try {
+			List<String> readLines = FileUtils.readLines(new File("cfg/stop_words.txt"));
+			readLines.addAll(Arrays.asList(StringUtils.split("a b c d e f g h i j k l m n o p q r s t u v w x y z", " ")));
+			return readLines;
+		} catch (IOException e) {
+			log.error("Stop Words could not be loaded.");
+			return new ArrayList<>();
+		}
 	}
 
 	private Object extractContentLength(Page page) {

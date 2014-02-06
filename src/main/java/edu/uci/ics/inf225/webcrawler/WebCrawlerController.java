@@ -1,6 +1,5 @@
 package edu.uci.ics.inf225.webcrawler;
 
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -8,59 +7,53 @@ import org.slf4j.LoggerFactory;
 
 import edu.uci.ics.crawler4j.crawler.CrawlConfig;
 import edu.uci.ics.crawler4j.crawler.CrawlController;
-import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import edu.uci.ics.inf225.webcrawler.crawler.SingleCrawler;
 import edu.uci.ics.inf225.webcrawler.stats.StatsCalculator;
+import edu.uci.ics.inf225.webcrawler.storage.PageStorage;
 import edu.uci.ics.inf225.webcrawler.tokenizing.PageTokenizer;
 
 public class WebCrawlerController {
 
-	private static final int PAGE_QUEUE_SIZE = 100;
 	private CrawlController controller;
 
 	private StatsCalculator calculator;
 
 	private static final Logger console = LoggerFactory.getLogger("console");
 
+	private PageStorage pageStorage;
+
+	private PageTokenizer tokenizer;
+
 	public WebCrawlerController() {
 	}
 
 	public void initialize() throws Exception {
-		LinkedBlockingQueue<Page> pageQueue = this.initializePageQueue();
-
 		this.initializeCrawler();
 
-		this.initializeTokenizer(pageQueue);
+		this.initializeStatsCalculator();
+
+		this.initializeTokenizer();
 
 		this.initializeStorage();
 
-		this.initializeStatsCalculator();
 	}
 
 	private void initializeStatsCalculator() {
-		// TODO Auto-generated method stub
-
-	}
-
-	private LinkedBlockingQueue<Page> initializePageQueue() {
-		LinkedBlockingQueue<Page> queue = new LinkedBlockingQueue<Page>(PAGE_QUEUE_SIZE);
-		CrawlingListener.setPageQueue(queue);
-		return queue;
+		calculator = new StatsCalculator();
 	}
 
 	private void initializeStorage() {
-		// TODO Initialize storage.
-		// HSQLDB stuff here.
-
+		pageStorage = new PageStorage(true);
+		pageStorage.init();
+		StaticCrawlingListener.addListener(pageStorage);
 	}
 
-	private void initializeTokenizer(LinkedBlockingQueue<Page> pageQueue) {
-		// TODO Initialize tokenizer.
-		// Lucene tokenizer here.
-		PageTokenizer tokenizer = new PageTokenizer(pageQueue, calculator);
+	private void initializeTokenizer() {
+		tokenizer = new PageTokenizer(calculator);
+		StaticCrawlingListener.addListener(tokenizer);
 		tokenizer.init();
 		tokenizer.start();
 
@@ -77,6 +70,7 @@ public class WebCrawlerController {
 		config.setMaxPagesToFetch(-1);
 		config.setIncludeHttpsPages(true);
 		config.setUserAgentString("UCI IR 33687990-62921655-43242954");
+		config.setResumableCrawling(true);
 
 		/*
 		 * Instantiate the controller for this crawl.
@@ -113,6 +107,12 @@ public class WebCrawlerController {
 	}
 
 	public void stop() {
-		// this.calculator.calculate();
+		pageStorage.stop();
+		try {
+			this.calculator.printStatistics();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

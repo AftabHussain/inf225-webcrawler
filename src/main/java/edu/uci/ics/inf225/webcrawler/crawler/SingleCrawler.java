@@ -10,7 +10,7 @@ import org.apache.commons.collections.PredicateUtils;
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.crawler.WebCrawler;
 import edu.uci.ics.crawler4j.url.WebURL;
-import edu.uci.ics.inf225.webcrawler.CrawlingListener;
+import edu.uci.ics.inf225.webcrawler.StaticCrawlingListener;
 
 public class SingleCrawler extends WebCrawler {
 
@@ -153,6 +153,6 @@ public class SingleCrawler extends WebCrawler {
 		// System.out.println("Html length: " + html.length());
 		// System.out.println("Number of outgoing links: " + links.size());
 		// }
-		CrawlingListener.processPage(page);
+		StaticCrawlingListener.newPage(page);
 	}
 }

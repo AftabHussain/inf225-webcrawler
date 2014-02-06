@@ -4,12 +4,15 @@
 package edu.uci.ics.inf225.webcrawler.tokenizing;
 
 import java.io.Reader;
+import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.core.StopFilter;
 import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.miscellaneous.WordDelimiterFilter;
+import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.util.Version;
 
 /**
@@ -21,10 +24,13 @@ import org.apache.lucene.util.Version;
  */
 public class SimpleAnalyzer extends Analyzer {
 
+	private List<String> stopWords;
+
 	/**
 	 * 
 	 */
-	public SimpleAnalyzer() {
+	public SimpleAnalyzer(List<String> stopWords) {
+		this.stopWords = stopWords;
 	}
 
 	/*
@@ -54,6 +60,7 @@ public class SimpleAnalyzer extends Analyzer {
 		 * Normalize tokens to lower-case.
 		 */
 		result = new LowerCaseFilter(Version.LUCENE_46, result);
+		result = new StopFilter(Version.LUCENE_46, result, new CharArraySet(Version.LUCENE_46, stopWords, false));
 
 		TokenStreamComponents components = new TokenStreamComponents(source, result);
 
