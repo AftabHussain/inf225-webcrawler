@@ -81,19 +81,19 @@ public class PageTokenizer {
 	public void processPage(Page page) {
 		pageLogger.info("{},{}", page.getWebURL().getURL(), extractContentLength(page));
 
-		calculator.newPage(page);
-		try {
-			List<String> tokens = getTerms(page);
-			passTermsToCalculator(tokens, 1);
-
-			List<String> _2grams = get2Grams(page);
-			passTermsToCalculator(_2grams, 2);
-
-		} catch (IOException e) {
-			log.error("Page {} could not be processed.", page.getWebURL());
-		} finally {
-			calculator.closePage(page);
-		}
+//		calculator.newPage(page);
+//		try {
+//			List<String> tokens = getTerms(page);
+//			passTermsToCalculator(tokens, 1);
+//
+//			List<String> _2grams = get2Grams(page);
+//			passTermsToCalculator(_2grams, 2);
+//
+//		} catch (IOException e) {
+//			log.error("Page {} could not be processed.", page.getWebURL());
+//		} finally {
+//			calculator.closePage(page);
+//		}
 	}
 
 	private void passTermsToCalculator(List<String> tokens, int gramity) {

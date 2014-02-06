@@ -40,6 +40,7 @@ public class Launcher {
 
 		@Override
 		public void run() {
+			System.out.println("Executing Shutdown Hook...");
 			controller.stop();
 		}
 	}

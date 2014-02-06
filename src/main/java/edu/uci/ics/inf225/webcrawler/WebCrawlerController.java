@@ -104,7 +104,7 @@ public class WebCrawlerController {
 	}
 
 	private void startCrawler() {
-		int numberOfCrawlers = 10;
+		int numberOfCrawlers = 20;
 		/*
 		 * Start the crawl. This is a blocking operation, meaning that your code
 		 * will reach the line after this only when crawling is finished.
