@@ -13,6 +13,9 @@ public class Launcher {
 		console.info("Initializing Web Crawler...");
 		try {
 			controller.initialize();
+
+			hookShutdownTasks(controller);
+
 			console.info("Starting Web Crawler...");
 			controller.start();
 			console.info("Web Crawler finished.");
@@ -21,5 +24,24 @@ public class Launcher {
 			e.printStackTrace();
 		}
 		System.exit(0); // TODO Implement stop method.
+	}
+
+	private static void hookShutdownTasks(WebCrawlerController controller) {
+		Runtime.getRuntime().addShutdownHook(new Thread(new FinalizationTasks(controller)));
+	}
+
+	private static class FinalizationTasks implements Runnable {
+
+		WebCrawlerController controller;
+
+		public FinalizationTasks(WebCrawlerController controller) {
+			this.controller = controller;
+		}
+
+		@Override
+		public void run() {
+			System.out.println("Executing Shutdown Hook...");
+			controller.stop();
+		}
 	}
 }

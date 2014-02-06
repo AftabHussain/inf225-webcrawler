@@ -16,7 +16,7 @@ public class SingleCrawler extends WebCrawler {
 
 	private static final String EXPECTED_SUBDOMAIN_SUFFIX = ".ics";
 	private static final String EXPECTED_DOMAIN = "uci.edu";
-	private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g" + "|png|tiff?|mid|mp2|mp3|mp4" + "|wav|avi|mov|mpeg|ram|m4v|pdf" + "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
+	private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|3gp|ram|m4v|pdf|ppt|xlsx?|docx?|rm|smil|wmv|swf|wma|zip|rar|gz|java|cc|cpp|py))$");
 
 	private Predicate shouldVisitPredicate;
 
@@ -70,7 +70,7 @@ public class SingleCrawler extends WebCrawler {
 			}
 		};
 	}
-	
+
 	/**
 	 * Checks whether a {@link WebURL}'s prefix is black-listed.
 	 * 
@@ -83,7 +83,7 @@ public class SingleCrawler extends WebCrawler {
 		// Blacklisted URL's prefixes should be added here.
 		blackListedPrefixes.add("http://archive.ics.uci.edu/ml/datasets.html?");
 		blackListedPrefixes.add("http://calendar.ics.uci.edu/calendar.php?");
-//		blackListedPrefixes.add("http://calendar.ics.uci.edu/calendar.php?");
+		blackListedPrefixes.add("https://duttgroup.ics.uci.edu/doku.php");
 
 		return new Predicate() {
 

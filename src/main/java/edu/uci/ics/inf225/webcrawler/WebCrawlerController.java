@@ -13,12 +13,15 @@ import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import edu.uci.ics.inf225.webcrawler.crawler.SingleCrawler;
+import edu.uci.ics.inf225.webcrawler.stats.StatsCalculator;
 import edu.uci.ics.inf225.webcrawler.tokenizing.PageTokenizer;
 
 public class WebCrawlerController {
 
 	private static final int PAGE_QUEUE_SIZE = 100;
 	private CrawlController controller;
+
+	private StatsCalculator calculator;
 
 	private static final Logger console = LoggerFactory.getLogger("console");
 
@@ -33,6 +36,13 @@ public class WebCrawlerController {
 		this.initializeTokenizer(pageQueue);
 
 		this.initializeStorage();
+
+		this.initializeStatsCalculator();
+	}
+
+	private void initializeStatsCalculator() {
+		// TODO Auto-generated method stub
+
 	}
 
 	private LinkedBlockingQueue<Page> initializePageQueue() {
@@ -50,14 +60,14 @@ public class WebCrawlerController {
 	private void initializeTokenizer(LinkedBlockingQueue<Page> pageQueue) {
 		// TODO Initialize tokenizer.
 		// Lucene tokenizer here.
-		PageTokenizer tokenizer = new PageTokenizer(pageQueue);
+		PageTokenizer tokenizer = new PageTokenizer(pageQueue, calculator);
 		tokenizer.init();
 		tokenizer.start();
 
 	}
 
 	private void initializeCrawler() throws Exception {
-		String crawlStorageFolder = "/data/crawl/root";
+		String crawlStorageFolder = "data/crawl/root";
 
 		CrawlConfig config = new CrawlConfig();
 		config.setCrawlStorageFolder(crawlStorageFolder);
@@ -66,6 +76,7 @@ public class WebCrawlerController {
 		config.setMaxDepthOfCrawling(-1);
 		config.setMaxPagesToFetch(-1);
 		config.setIncludeHttpsPages(true);
+		config.setUserAgentString("UCI IR 33687990-62921655-43242954");
 
 		/*
 		 * Instantiate the controller for this crawl.
@@ -93,14 +104,15 @@ public class WebCrawlerController {
 	}
 
 	private void startCrawler() {
-		// TODO Start Crawler here. BLOCKING OPERATION. It will not continue
-		// until it
-		// finishes.
-		int numberOfCrawlers = 10;
+		int numberOfCrawlers = 20;
 		/*
 		 * Start the crawl. This is a blocking operation, meaning that your code
 		 * will reach the line after this only when crawling is finished.
 		 */
 		controller.start(SingleCrawler.class, numberOfCrawlers);
+	}
+
+	public void stop() {
+		// this.calculator.calculate();
 	}
 }
